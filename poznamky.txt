@@ -1,0 +1,73 @@
+1.) Vytvoril som si virtuálne prostredie myenv
+python3.12 -m venv myenv
+potom som ho aktivoval pomocou myenv\Scripts\activate
+pred názvom cesty musí byť (myenv)
+na deaktivovanie napísať do terminálu deactivate
+
+2.) Našiel som si knižnice tretích strán, ktoré budem potrebovať pre svoj projekt a tie následne pridám do súboru requirements.txt.
+Budem tu konkrétne potrebovať knižnice requests, beautifulsoup4, python-dotenv, streamlit a openai pre čistejší názov
+Takže do terminálu: pip install -r requirements.txt
+Pomocou príkazu pip freeze > requirements.txt som si uložil nainštalované balíky do súboru requirements.txt
+
+3.) Vytvoril som súbor .env - na ukladanie premenných, v tomto prípade ide o vygenerované tokeny, ktoré sa nikdy nezdieľajú
+
+4.) Vytvoril som hlavný súbor projektu, ktorý má názov main.py a zvolíme verziu pythonu, ktorá je v rámci tohto projektu (myenv)
+
+5.) Naimportoval som os, prípadne load_dotenv z dotenv a cez os.getenv() budem čítať hodnoty z .env
+
+6.) Vytvorenie .gitignore, aby som na Github neposielal citlivé súbory, alebo tie, ktoré nechcem zdieľať
+
+7.) Tvorba súboru assistant_instructions.txt, do ktorého som si pripravil inštrukcie pre asistenta ako má odpovedať pri porovnávani cien produktov.
+
+8.) Vytvoril som tools.py, kde som zadefinoval tool get_product_prices, parameter je product_name a tool bude slúžiť na získanie cien produktu z viacerých obchodov.
+
+9.) Vytvoril som súbor price_scraper.py a triedu PriceScraper. V nej som vytvoril metódu `get_product_prices(product_name)`, ktorá zatiaľ vracia testovacie dáta vo forme zoznamu ponúk. Každá ponuka obsahuje:
+																										- product_name
+																										- shop
+																										- price
+																										- url
+Zatiaľ sú to mock dáta z 3 obchodov:
+				    - Alza
+				    - Nay
+				    - Smarty
+
+asistantManager - zamyslieť sa, aké ďalšie statusy majú ukončiť loop, pridať neskôr malú pauzu do loopu
+
+10.) Začal som pracovať na súbore assistant_manager.py - vytvorenie triedy AssistantManager, ktorá prijíma - client, assistant, thread a do triedy som pridal základne atribúty - self.run, self.summary
+
+11.) V AssistantManager som vytvoril metódu add_message_to_thread(role, content), ktorá vloží správu do threadu, aby ju asistent vedel spracovať
+
+12.) Metódu run_assitant - ktorá spustí asistenta nad aktuálnym threadom a uloží run do self.run
+
+13.) Ďalej metódu check_run(), ktorá kontroluje stav aktuálneho runu a vracia jeho status
+
+14.) Pri metóde wait_for_run_to_complete() prebieha v cykle kontrola stav runu. Ak je run dokončený, načíta poslednú odpoveď, ak asistent vyžaduje tool call, pripraví tool outputs a odošle ich späť.
+
+15.) Metóda format_output(prices_output) prevedie zoznam ponúk na textový výstup vo formáte: - Product name
+											     - Shop
+											     - Price
+ 											     - URL
+
+16.) Metóda prepare_tool_outputs(tool_calls) robí následovne: načíta argumenty tool callu, získa product_name, vytvorí objekt PriceScraper, zavolá get_product_prices(product_name), prevedie výsledok cez format_output a pripraví odpoveď pre tool output
+
+17.) Metóda get_latest_response() načíta poslednú správu z threadu a uloží ju do self.summary
+
+18.) Metóda get_summary() vracia uloženú odpoveď asistenta.
+
+19.) Súbor assistant_manager.py mám zatiaľ v prvej funkčnej verzii. Obsahuje hlavný flow projektu, ale neskôr sa môže doplniť o ošetrenie ďalších stavov runu, pauzu v čakacej slučke a bezpečnejšie čítanie odpovede
+
+20.) Pokračoval som v súbore main.py - naimportoval som openai, load_dotenv, logging.
+
+21.) Vytvoril som funkciu read_instructions(file_path), ktorá načíta text zo súboru s inštrukciami pre asistenta a zároveň som ošetril chybu FileNotFoundError a zapisovanie chyby do app.log
+
+22.) V main.py som pripravil funkciu main(), v ktorej načítavam .env pomocou load_dotenv(); nastavujem logging do súboru app.log; vytváram OpenAI klenta cez openai.OpenAI(); pripravil som si premennú model = "gpt-4.1-mini"
+
+23.) Minidetail - upravil som v .env názov premennej na OPENAI_API_KEY a vďaka tomu si OpenAI klient vie API kľúč načítať priamo z prostredia. Keďže OpenAI klient si pri názve OPENAI_API_KEY načíta kľúč automaticky, modul os v aktuálnom main.py už nepotrebujem
+
+24.) V main.py som pridal knižnicu streamlit a začal pripravovať používateľské rozhranie aplikácie
+
+25.) Ďalej som pridal titulok aplikácie pomocou streamlit.title(Názov), formulár cez streamlit.form(...), textové pole na zadanie produktu a tlačidlo na potvrdenie formulára.
+
+26.) Importoval som tools z assistant_tools, lebo pri if submit_button ho budem potrebovať
+
+27.) Do if submit_button som vložil logiku vytvorenia asistenta cez streamlit.session_state. Táto logika slúži na to, aby sa asistent nevytváral pri každom novom kliknutí znova, ale aby sa uložil do session state a znovu použil.
